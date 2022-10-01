@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Group;
+use App\Models\GroupUser;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -16,20 +18,19 @@ class UserController extends Controller
         $user->password = Hash::make($request->password);
         $user->save();
         return response()->json([
-            "msg" => "Registro exitoso",
+            "message" => "Registro exitoso",
         ]);
     }
 
     public function login(Request $request)
     {
-        $user = User::where("email", "=", $request->email)->first();
-        if (isset($user)) {
+        $user = User::where("email", $request->email)->first();
+        if (isset($user->id)) {
             if (Hash::check($request->password, $user->password)) {
                 //creamos el token
-                $token = $user->createToken("auth_token")->plainTextToken;
+                $token = $user->createToken("auth_token")->accessToken;
                 return response([
-                    "status" => 1,
-                    "msg" => "Usuario registrado exitosamente",
+                    "message" => "Success Login",
                     "user" => [
                         'id' => $user->id,
                         'email' => $user->email,
@@ -39,13 +40,29 @@ class UserController extends Controller
                 ]);
             } else {
                 return response()->json([
-                    "msg" => "la password es incorrecta",
+                    "message" => "Password Incorrect",
                 ]);
             }
         } else {
             return response()->json([
-                "msg" => "Usuario no registrado",
+                "error" => "Usuario no registrado",
             ], 404);
         }
+    }
+
+    public function joinToGroup(Group $group){
+        $userBelongsToGroup = GroupUser::where('user_id',auth()->user()->id)->where('group_id',$group->id)->first();
+        if(!isset($userBelongsToGroup)){
+            $groupUser = new GroupUser();
+            $groupUser->user_id = auth()->user()->id;
+            $groupUser->group_id = $group->id;
+            $groupUser->save();
+            return response()->json([
+                'message' => 'User join to group '.$group->id
+            ]);
+        }
+        return response()->json([
+            'message' => 'User belongs to group '.$group->id
+        ]);
     }
 }
