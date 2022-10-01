@@ -24,6 +24,7 @@ MAIL_FROM_ADDRESS="no-reply@gmail.com"
 Ejecutar el siguiente comando:
 ```sh
 composer install
+php artisan migrate
 php artisan passport:install
 ```
 ## Ejecutar Proyecto
